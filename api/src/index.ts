@@ -9,7 +9,12 @@ import type { AppEnv } from "./types";
 
 const app = new Hono<AppEnv>();
 
-// CORS — allow the Vite dev server and production domain
+// ── Public routes (no auth) ────────────────────────────────────────────────
+// Health check — required by the starter spec, must be before CORS/auth
+app.get("/api/health", (c) => c.json({ status: "ok" }));
+app.get("/", (c) => c.json({ ok: true, service: "survey-builder-api" }));
+
+// ── CORS ───────────────────────────────────────────────────────────────────
 app.use(
   "/api/*",
   cors({
@@ -24,17 +29,14 @@ app.use(
   }),
 );
 
-// Global auth middleware — skips /api/auth and /api/public paths internally
+// ── Auth middleware ────────────────────────────────────────────────────────
+// Skips /api/auth and /api/public paths internally
 app.use("/api/*", authMiddleware);
 
-// Route mounts
+// ── Route mounts ───────────────────────────────────────────────────────────
 app.route("/api/auth", authRouter);
 app.route("/api/public", publicRouter);
 app.route("/api/surveys", surveysRouter);
 app.route("/api/surveys", responsesRouter);
-
-// Health check — required by the starter spec
-app.get("/", (c) => c.json({ ok: true, service: "survey-builder-api" }));
-app.get("/api/health", (c) => c.json({ status: "ok" }));
 
 export default app;
