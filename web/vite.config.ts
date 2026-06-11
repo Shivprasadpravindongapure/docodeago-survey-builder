@@ -7,8 +7,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:8787",
+        target: "https://docodeago-survey-builder-api.prasaddongapure7660.workers.dev",
         changeOrigin: true,
+        secure: true,
       },
     },
   },
