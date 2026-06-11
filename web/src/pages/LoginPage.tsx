@@ -79,52 +79,58 @@ export function LoginPage() {
             </Button>
           </form>
         ) : (
-          <div
-            style={{
-              background: "var(--brand-light)",
-              border: "1px solid var(--brand)",
-              borderRadius: "var(--radius-lg)",
-              padding: "24px",
-              textAlign: "center",
-            }}
-          >
-            <p style={{ fontSize: 36, marginBottom: 8 }}>📬</p>
-            <p style={{ fontWeight: 700, color: "var(--text)", marginBottom: 6, fontSize: 16 }}>
-              Magic link sent!
-            </p>
-            <p style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 20 }}>
-              Check <strong>{email}</strong> for your sign-in link.
-              {verifyUrl && " Or sign in instantly below:"}
-            </p>
-
-            {/* Instant sign-in — always shown so the demo always works */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Primary CTA — instant sign-in, always shown */}
             {verifyUrl && (
               <a
                 href={verifyUrl}
                 id="magic-link-click-here"
                 style={{
                   display: "block",
+                  textAlign: "center",
                   background: "linear-gradient(135deg, var(--brand), var(--brand-dark))",
                   color: "#fff",
                   textDecoration: "none",
                   fontWeight: 700,
-                  fontSize: 15,
-                  padding: "14px 24px",
+                  fontSize: 16,
+                  padding: "16px 24px",
                   borderRadius: "var(--radius-md)",
-                  marginBottom: 12,
-                  transition: "opacity 0.15s",
+                  boxShadow: "0 8px 32px rgba(108,99,255,0.35)",
+                  transition: "opacity 0.15s, transform 0.15s",
                 }}
-                onMouseOver={(e) => { e.currentTarget.style.opacity = "0.9"; }}
-                onMouseOut={(e) => { e.currentTarget.style.opacity = "1"; }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.opacity = "0.92";
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.opacity = "1";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
               >
-                ✅ Click here to sign in instantly
+                ✅ Click here to sign in
               </a>
             )}
+
+            {/* Email notice */}
+            <div
+              style={{
+                background: "var(--brand-light)",
+                border: "1px solid rgba(108,99,255,0.3)",
+                borderRadius: "var(--radius-md)",
+                padding: "14px 16px",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ fontSize: 13, color: "var(--text-2)", margin: 0 }}>
+                📬 A sign-in link was also sent to{" "}
+                <strong style={{ color: "var(--text)" }}>{email}</strong>
+              </p>
+            </div>
 
             <button
               type="button"
               className="btn-ghost"
-              style={{ marginTop: 8, fontSize: 13 }}
+              style={{ fontSize: 13, marginTop: 4 }}
               onClick={() => { setSent(false); setVerifyUrl(null); }}
             >
               ← Use a different email

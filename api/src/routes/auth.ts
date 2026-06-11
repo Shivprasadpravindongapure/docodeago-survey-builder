@@ -25,14 +25,16 @@ authRouter.post(
     const token = await createMagicLink(c.env.DB, email);
     await sendMagicLinkEmail(email, token, c.env);
 
-    // Always return the verifyUrl — in production the email arrives;
-    // on the live demo page the user can click it directly.
-    const origin = new URL(c.req.url).origin.includes("workers.dev")
+    // Build the verify URL. When called from workers.dev (CORS request from Pages),
+    // redirect to the Pages frontend URL.
+    const requestOrigin = new URL(c.req.url).origin;
+    const frontendOrigin = requestOrigin.includes("workers.dev")
       ? "https://docodeago-survey-builder.pages.dev"
-      : new URL(c.req.url).origin;
-    const verifyUrl = `${origin}/verify?token=${token}`;
+      : requestOrigin;
+    const verifyUrl = `${frontendOrigin}/verify?token=${token}`;
 
-    return c.json({ ok: true, verifyUrl });
+    // Return inside `data` so it matches ApiResponse<{verifyUrl:string}> shape
+    return c.json({ ok: true, data: { verifyUrl } });
   },
 );
 
