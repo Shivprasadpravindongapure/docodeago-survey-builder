@@ -23,7 +23,7 @@ authRouter.post(
     const { email } = c.req.valid("json");
 
     const token = await createMagicLink(c.env.DB, email);
-    await sendMagicLinkEmail(email, token);
+    await sendMagicLinkEmail(email, token, c.env);
 
     return c.json({ ok: true });
   },
@@ -45,10 +45,11 @@ authRouter.post(
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     const sessionToken = await createSession(c.env.DB, user.id, expiresAt);
+    const isHttps = new URL(c.req.url).protocol === "https:";
 
     setCookie(c, "session", sessionToken, {
       httpOnly: true,
-      secure: false, // set to true in production (HTTPS)
+      secure: isHttps,
       sameSite: "Lax",
       path: "/",
       expires: expiresAt,
