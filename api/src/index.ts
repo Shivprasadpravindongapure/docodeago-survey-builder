@@ -13,7 +13,11 @@ const app = new Hono<AppEnv>();
 app.use(
   "/api/*",
   cors({
-    origin: ["http://localhost:5173", "http://localhost:4173"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:4173",
+      "https://docodeago-survey-builder.pages.dev",
+    ],
     allowHeaders: ["Content-Type"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
