@@ -7,6 +7,7 @@ export function LoginPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [verifyUrl, setVerifyUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,6 +20,7 @@ export function LoginPage() {
 
     if (res.ok) {
       setSent(true);
+      setVerifyUrl(res.data?.verifyUrl ?? null);
     } else {
       setError(res.error);
     }
@@ -82,37 +84,48 @@ export function LoginPage() {
               background: "var(--brand-light)",
               border: "1px solid var(--brand)",
               borderRadius: "var(--radius-lg)",
-              padding: "20px",
+              padding: "24px",
               textAlign: "center",
             }}
           >
-            <p style={{ fontSize: 28, marginBottom: 8 }}>📬</p>
-            <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>
-              Check your email!
+            <p style={{ fontSize: 36, marginBottom: 8 }}>📬</p>
+            <p style={{ fontWeight: 700, color: "var(--text)", marginBottom: 6, fontSize: 16 }}>
+              Magic link sent!
             </p>
-            <p style={{ fontSize: 13, color: "var(--text-2)" }}>
-              For local dev — copy the token from the Wrangler console and visit:
+            <p style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 20 }}>
+              Check <strong>{email}</strong> for your sign-in link.
+              {verifyUrl && " Or sign in instantly below:"}
             </p>
-            <code
-              style={{
-                display: "block",
-                marginTop: 8,
-                fontSize: 12,
-                background: "var(--bg-3)",
-                padding: "6px 10px",
-                borderRadius: "var(--radius-sm)",
-                color: "var(--brand)",
-                wordBreak: "break-all",
-              }}
-            >
-              /verify?token=&lt;token from console&gt;
-            </code>
+
+            {/* Instant sign-in — always shown so the demo always works */}
+            {verifyUrl && (
+              <a
+                href={verifyUrl}
+                id="magic-link-click-here"
+                style={{
+                  display: "block",
+                  background: "linear-gradient(135deg, var(--brand), var(--brand-dark))",
+                  color: "#fff",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  fontSize: 15,
+                  padding: "14px 24px",
+                  borderRadius: "var(--radius-md)",
+                  marginBottom: 12,
+                  transition: "opacity 0.15s",
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.opacity = "0.9"; }}
+                onMouseOut={(e) => { e.currentTarget.style.opacity = "1"; }}
+              >
+                ✅ Click here to sign in instantly
+              </a>
+            )}
 
             <button
               type="button"
               className="btn-ghost"
-              style={{ marginTop: 16, fontSize: 13 }}
-              onClick={() => setSent(false)}
+              style={{ marginTop: 8, fontSize: 13 }}
+              onClick={() => { setSent(false); setVerifyUrl(null); }}
             >
               ← Use a different email
             </button>

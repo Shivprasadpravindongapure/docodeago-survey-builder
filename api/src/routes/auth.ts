@@ -25,7 +25,14 @@ authRouter.post(
     const token = await createMagicLink(c.env.DB, email);
     await sendMagicLinkEmail(email, token, c.env);
 
-    return c.json({ ok: true });
+    // Always return the verifyUrl — in production the email arrives;
+    // on the live demo page the user can click it directly.
+    const origin = new URL(c.req.url).origin.includes("workers.dev")
+      ? "https://docodeago-survey-builder.pages.dev"
+      : new URL(c.req.url).origin;
+    const verifyUrl = `${origin}/verify?token=${token}`;
+
+    return c.json({ ok: true, verifyUrl });
   },
 );
 

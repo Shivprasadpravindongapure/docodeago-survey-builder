@@ -1,155 +1,152 @@
-export interface EmailBindings {
-  SMTP_EMAIL: string;
-  SMTP_PASS: string;
-}
+import type { Bindings } from "../types";
 
-/**
- * Send a magic link email.
- *
- * In production (Cloudflare Workers): Uses MailChannels API (free, CF partner).
- * In local dev: Falls back to console logging since MailChannels requires a live Worker.
- *
- * Gmail App Password stored as SMTP_PASS secret, Gmail address as SMTP_EMAIL.
- */
-export async function sendMagicLinkEmail(
-  email: string,
-  token: string,
-  env: EmailBindings,
-): Promise<void> {
-  const verifyUrl = `https://docodeago-survey-builder.pages.dev/verify?token=${token}`;
-  const fromEmail = env.SMTP_EMAIL ?? "prasaddongapure7660@gmail.com";
-  const fromName = "FormCraft Survey Builder";
+const APP_NAME = "Survey-Builders";
+const PAGES_URL = "https://docodeago-survey-builder.pages.dev";
 
-  const subject = "Your FormCraft magic sign-in link";
-  const htmlBody = buildEmailHtml(verifyUrl, token);
-  const textBody = `Sign in to FormCraft\n\nClick this link to sign in:\n${verifyUrl}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, ignore this email.`;
-
-  // Log in all environments for local dev debugging
-  console.log("=================================================");
-  console.log("📧 MAGIC LINK EMAIL");
-  console.log(`To: ${email}`);
-  console.log(`Token: ${token}`);
-  console.log(`Verify URL: ${verifyUrl}`);
-  console.log("=================================================");
-
-  // Try MailChannels (works in deployed CF Workers)
-  try {
-    const payload = {
-      personalizations: [
-        {
-          to: [{ email }],
-        },
-      ],
-      from: {
-        email: fromEmail,
-        name: fromName,
-      },
-      reply_to: {
-        email: fromEmail,
-        name: fromName,
-      },
+async function sendViaResend(
+  to: string,
+  subject: string,
+  html: string,
+  apiKey: string,
+): Promise<boolean> {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      // onboarding@resend.dev works on free tier without domain verification
+      from: `${APP_NAME} <onboarding@resend.dev>`,
+      to: [to],
       subject,
-      content: [
-        { type: "text/plain", value: textBody },
-        { type: "text/html", value: htmlBody },
-      ],
-    };
-
-    const res = await fetch("https://api.mailchannels.net/tx/v1/send", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("MailChannels error:", res.status, err);
-    } else {
-      console.log(`✅ Email sent to ${email} via MailChannels`);
-    }
-  } catch (err) {
-    console.error("Email send failed (MailChannels):", err);
-    // In dev, the URL is still logged above so the user can manually verify
+      html,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    console.error(`[email] Resend error ${res.status}: ${err}`);
   }
+  return res.ok;
 }
 
-function buildEmailHtml(verifyUrl: string, token: string): string {
-  return `<!DOCTYPE html>
-<html lang="en">
+async function sendViaMailChannels(
+  to: string,
+  subject: string,
+  html: string,
+  senderEmail: string,
+): Promise<boolean> {
+  const res = await fetch("https://api.mailchannels.net/tx/v1/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: senderEmail, name: APP_NAME },
+      subject,
+      content: [{ type: "text/html", value: html }],
+    }),
+  });
+  return res.ok || res.status === 202;
+}
+
+export async function sendMagicLinkEmail(
+  to: string,
+  token: string,
+  env: Bindings,
+): Promise<void> {
+  const verifyUrl = `${PAGES_URL}/verify?token=${token}`;
+  const subject = `Sign in to ${APP_NAME}`;
+
+  const html = `
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sign in to FormCraft</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Sign in to ${APP_NAME}</title>
 </head>
-<body style="margin:0;padding:0;background:#0f0f13;font-family:Inter,-apple-system,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
-    style="background:#0f0f13;padding:40px 0;">
-    <tr>
-      <td align="center">
-        <table width="560" cellpadding="0" cellspacing="0" role="presentation"
-          style="background:#17171f;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;max-width:560px;width:100%;">
+<body style="margin:0;padding:0;background:#0f0f1a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f0f1a;padding:48px 16px">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0"
+        style="background:#1a1a2e;border-radius:20px;border:1px solid #2a2a4a;overflow:hidden;max-width:560px;width:100%">
 
-          <!-- Header -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#6366f1,#4f46e5);padding:32px 40px;text-align:center;">
-              <h1 style="color:#fff;font-size:24px;font-weight:800;margin:0;letter-spacing:-0.02em;">
-                FormCraft
-              </h1>
-              <p style="color:rgba(255,255,255,0.75);font-size:14px;margin:6px 0 0;">
-                Survey Builder
-              </p>
-            </td>
-          </tr>
+        <!-- Header gradient -->
+        <tr><td style="background:linear-gradient(135deg,#6c63ff 0%,#4a40d4 100%);padding:36px 40px;text-align:center">
+          <h1 style="margin:0;color:#fff;font-size:26px;font-weight:800;letter-spacing:-0.5px">
+            📋 ${APP_NAME}
+          </h1>
+          <p style="margin:8px 0 0;color:rgba(255,255,255,0.75);font-size:13px;letter-spacing:0.3px">
+            Branded Survey Builder
+          </p>
+        </td></tr>
 
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px;">
-              <h2 style="color:#f0f0f5;font-size:20px;font-weight:700;margin:0 0 12px;">
-                Your magic sign-in link ✨
-              </h2>
-              <p style="color:#a0a0b8;font-size:15px;line-height:1.6;margin:0 0 28px;">
-                Click the button below to sign in to your FormCraft account.
-                This link expires in <strong style="color:#f0f0f5;">15 minutes</strong>.
-              </p>
+        <!-- Body -->
+        <tr><td style="padding:40px">
+          <h2 style="margin:0 0 12px;color:#fff;font-size:20px;font-weight:700">
+            Your sign-in link ✨
+          </h2>
+          <p style="margin:0 0 28px;color:#a0a0c0;font-size:15px;line-height:1.7">
+            Click the button below to sign in to <strong style="color:#fff">${APP_NAME}</strong>.
+            This link expires in <strong style="color:#fff">15 minutes</strong> and can only be used once.
+          </p>
 
-              <table cellpadding="0" cellspacing="0" role="presentation">
-                <tr>
-                  <td style="border-radius:10px;background:#6366f1;">
-                    <a href="${verifyUrl}"
-                      style="display:inline-block;padding:14px 32px;color:#fff;font-size:15px;
-                             font-weight:600;text-decoration:none;border-radius:10px;">
-                      Sign in to FormCraft →
-                    </a>
-                  </td>
-                </tr>
-              </table>
+          <!-- CTA button -->
+          <div style="text-align:center;margin:32px 0">
+            <a href="${verifyUrl}"
+               style="display:inline-block;background:linear-gradient(135deg,#6c63ff,#4a40d4);
+                      color:#fff;text-decoration:none;font-weight:700;font-size:16px;
+                      padding:18px 48px;border-radius:14px;letter-spacing:0.3px;
+                      box-shadow:0 8px 32px rgba(108,99,255,0.35)">
+              Sign in now →
+            </a>
+          </div>
 
-              <p style="color:#6b6b85;font-size:13px;margin:28px 0 0;line-height:1.5;">
-                Or copy this link into your browser:<br/>
-                <span style="color:#6366f1;word-break:break-all;">${verifyUrl}</span>
-              </p>
+          <!-- Fallback URL -->
+          <p style="margin:24px 0 0;color:#606080;font-size:13px;line-height:1.8">
+            Button not working? Copy and paste this link into your browser:<br/>
+            <a href="${verifyUrl}" style="color:#6c63ff;word-break:break-all;font-size:12px">${verifyUrl}</a>
+          </p>
 
-              <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:28px 0;"/>
+          <hr style="border:none;border-top:1px solid #2a2a4a;margin:32px 0"/>
+          <p style="margin:0;color:#505070;font-size:12px;line-height:1.6">
+            This sign-in link was requested for <strong style="color:#707090">${to}</strong>.
+            If you didn't request this, you can safely ignore it.
+          </p>
+        </td></tr>
 
-              <p style="color:#6b6b85;font-size:12px;margin:0;line-height:1.5;">
-                For local dev — token: <code style="background:#1e1e2a;padding:2px 6px;border-radius:4px;color:#6366f1;">${token}</code><br/>
-                If you didn't request this sign-in link, you can safely ignore this email.
-              </p>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="background:#0f0f13;padding:20px 40px;text-align:center;border-top:1px solid rgba(255,255,255,0.05);">
-              <p style="color:#6b6b85;font-size:12px;margin:0;">
-                © 2026 FormCraft · Powered by Cloudflare Workers
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
+        <!-- Footer -->
+        <tr><td style="background:#111128;padding:20px 40px;text-align:center">
+          <p style="margin:0;color:#404060;font-size:11px">
+            © 2025 ${APP_NAME} — Powered by FormCraft
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
   </table>
 </body>
 </html>`;
+
+  // 1. Try Resend (primary — free tier, reliable in Workers)
+  if (env.RESEND_API_KEY) {
+    const sent = await sendViaResend(to, subject, html, env.RESEND_API_KEY);
+    if (sent) {
+      console.log(`[email] ✅ Sent via Resend to ${to}`);
+      return;
+    }
+    console.warn("[email] Resend failed, falling back to MailChannels...");
+  }
+
+  // 2. Fallback to MailChannels
+  if (env.SMTP_EMAIL) {
+    const sent = await sendViaMailChannels(to, subject, html, env.SMTP_EMAIL);
+    if (sent) {
+      console.log(`[email] ✅ Sent via MailChannels to ${to}`);
+      return;
+    }
+    console.warn("[email] MailChannels also failed.");
+  }
+
+  // 3. Always log the link — visible in Cloudflare Worker logs dashboard
+  console.log(`[email] 🔗 MAGIC LINK for ${to} → ${verifyUrl}`);
 }

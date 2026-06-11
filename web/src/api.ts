@@ -49,8 +49,8 @@ async function request<T>(path: string, options?: RequestInit): Promise<ApiRespo
 
 // ─── Auth API ──────────────────────────────────────────────────────────────
 export const authApi = {
-  magicLink: (email: string): Promise<ApiResponse<null>> =>
-    request<null>("/auth/magic-link", {
+  magicLink: (email: string): Promise<ApiResponse<{ verifyUrl: string }>> =>
+    request<{ verifyUrl: string }>("/auth/magic-link", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
