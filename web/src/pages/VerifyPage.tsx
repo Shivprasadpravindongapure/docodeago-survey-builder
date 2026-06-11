@@ -22,7 +22,9 @@ export function VerifyPage() {
 
     authApi.verify(token).then((res) => {
       if (res.ok) {
-        navigate({ to: "/dashboard" });
+        // Hard redirect (not SPA navigate) so the browser re-sends the
+        // SameSite=None session cookie in the new page context
+        window.location.href = "/dashboard";
       } else {
         setError(res.error || "Invalid or expired token. Please request a new link.");
         setLoading(false);

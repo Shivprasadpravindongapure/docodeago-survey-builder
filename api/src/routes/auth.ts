@@ -52,14 +52,17 @@ authRouter.post(
 
     const user = await upsertUser(c.env.DB, email);
 
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    // 30-day session — user stays signed in across visits
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     const sessionToken = await createSession(c.env.DB, user.id, expiresAt);
-    const isHttps = new URL(c.req.url).protocol === "https:";
 
+    // SameSite=None is required for cross-origin cookies:
+    // frontend is on pages.dev, API is on workers.dev — different origins.
+    // Must be Secure (HTTPS only) when SameSite=None.
     setCookie(c, "session", sessionToken, {
       httpOnly: true,
-      secure: isHttps,
-      sameSite: "Lax",
+      secure: true,
+      sameSite: "None",
       path: "/",
       expires: expiresAt,
     });
