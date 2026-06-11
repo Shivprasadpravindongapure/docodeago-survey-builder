@@ -2,7 +2,36 @@ import type { Bindings } from "../types";
 
 const APP_NAME = "Survey-Builders";
 const PAGES_URL = "https://docodeago-survey-builder.pages.dev";
+const SENDER_EMAIL = "prasaddongapure7660@gmail.com";
 
+// ── Brevo (primary — 300 emails/day free, any recipient) ──────────────────
+async function sendViaBrevo(
+  to: string,
+  subject: string,
+  html: string,
+  apiKey: string,
+): Promise<boolean> {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: APP_NAME, email: SENDER_EMAIL },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => "");
+    console.error(`[email] Brevo error ${res.status}: ${err}`);
+  }
+  return res.ok || res.status === 201;
+}
+
+// ── Resend (fallback — 100 emails/day, only own email on free tier) ────────
 async function sendViaResend(
   to: string,
   subject: string,
@@ -16,49 +45,18 @@ async function sendViaResend(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      // onboarding@resend.dev works on free tier without domain verification
       from: `${APP_NAME} <onboarding@resend.dev>`,
       to: [to],
       subject,
       html,
     }),
   });
-  if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    console.error(`[email] Resend error ${res.status}: ${err}`);
-  }
   return res.ok;
 }
 
-async function sendViaMailChannels(
-  to: string,
-  subject: string,
-  html: string,
-  senderEmail: string,
-): Promise<boolean> {
-  const res = await fetch("https://api.mailchannels.net/tx/v1/send", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      personalizations: [{ to: [{ email: to }] }],
-      from: { email: senderEmail, name: APP_NAME },
-      subject,
-      content: [{ type: "text/html", value: html }],
-    }),
-  });
-  return res.ok || res.status === 202;
-}
-
-export async function sendMagicLinkEmail(
-  to: string,
-  token: string,
-  env: Bindings,
-): Promise<void> {
-  const verifyUrl = `${PAGES_URL}/verify?token=${token}`;
-  const subject = `Sign in to ${APP_NAME}`;
-
-  const html = `
-<!DOCTYPE html>
+// ── Email HTML template ────────────────────────────────────────────────────
+function buildHtml(to: string, verifyUrl: string): string {
+  return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8"/>
@@ -71,82 +69,81 @@ export async function sendMagicLinkEmail(
       <table width="560" cellpadding="0" cellspacing="0"
         style="background:#1a1a2e;border-radius:20px;border:1px solid #2a2a4a;overflow:hidden;max-width:560px;width:100%">
 
-        <!-- Header gradient -->
         <tr><td style="background:linear-gradient(135deg,#6c63ff 0%,#4a40d4 100%);padding:36px 40px;text-align:center">
           <h1 style="margin:0;color:#fff;font-size:26px;font-weight:800;letter-spacing:-0.5px">
             📋 ${APP_NAME}
           </h1>
-          <p style="margin:8px 0 0;color:rgba(255,255,255,0.75);font-size:13px;letter-spacing:0.3px">
-            Branded Survey Builder
-          </p>
+          <p style="margin:8px 0 0;color:rgba(255,255,255,0.75);font-size:13px">Branded Survey Builder</p>
         </td></tr>
 
-        <!-- Body -->
         <tr><td style="padding:40px">
-          <h2 style="margin:0 0 12px;color:#fff;font-size:20px;font-weight:700">
-            Your sign-in link ✨
-          </h2>
+          <h2 style="margin:0 0 12px;color:#fff;font-size:20px;font-weight:700">Your sign-in link ✨</h2>
           <p style="margin:0 0 28px;color:#a0a0c0;font-size:15px;line-height:1.7">
             Click the button below to sign in to <strong style="color:#fff">${APP_NAME}</strong>.
             This link expires in <strong style="color:#fff">15 minutes</strong> and can only be used once.
           </p>
 
-          <!-- CTA button -->
           <div style="text-align:center;margin:32px 0">
             <a href="${verifyUrl}"
                style="display:inline-block;background:linear-gradient(135deg,#6c63ff,#4a40d4);
                       color:#fff;text-decoration:none;font-weight:700;font-size:16px;
                       padding:18px 48px;border-radius:14px;letter-spacing:0.3px;
                       box-shadow:0 8px 32px rgba(108,99,255,0.35)">
-              Sign in now →
+              Sign in to ${APP_NAME} →
             </a>
           </div>
 
-          <!-- Fallback URL -->
-          <p style="margin:24px 0 0;color:#606080;font-size:13px;line-height:1.8">
-            Button not working? Copy and paste this link into your browser:<br/>
-            <a href="${verifyUrl}" style="color:#6c63ff;word-break:break-all;font-size:12px">${verifyUrl}</a>
+          <p style="margin:24px 0 0;color:#606080;font-size:12px;line-height:1.8">
+            Button not working? Copy and paste:<br/>
+            <a href="${verifyUrl}" style="color:#6c63ff;word-break:break-all">${verifyUrl}</a>
           </p>
 
-          <hr style="border:none;border-top:1px solid #2a2a4a;margin:32px 0"/>
-          <p style="margin:0;color:#505070;font-size:12px;line-height:1.6">
-            This sign-in link was requested for <strong style="color:#707090">${to}</strong>.
-            If you didn't request this, you can safely ignore it.
+          <hr style="border:none;border-top:1px solid #2a2a4a;margin:28px 0"/>
+          <p style="margin:0;color:#505070;font-size:12px">
+            Requested for <strong style="color:#707090">${to}</strong>. Didn't request this? Ignore safely.
           </p>
         </td></tr>
 
-        <!-- Footer -->
-        <tr><td style="background:#111128;padding:20px 40px;text-align:center">
-          <p style="margin:0;color:#404060;font-size:11px">
-            © 2025 ${APP_NAME} — Powered by FormCraft
-          </p>
+        <tr><td style="background:#111128;padding:16px 40px;text-align:center">
+          <p style="margin:0;color:#404060;font-size:11px">© 2025 ${APP_NAME}</p>
         </td></tr>
       </table>
     </td></tr>
   </table>
 </body>
 </html>`;
+}
 
-  // 1. Try Resend (primary — free tier, reliable in Workers)
+// ── Main export ────────────────────────────────────────────────────────────
+export async function sendMagicLinkEmail(
+  to: string,
+  token: string,
+  env: Bindings,
+): Promise<void> {
+  const verifyUrl = `${PAGES_URL}/verify?token=${token}`;
+  const subject = `Sign in to ${APP_NAME}`;
+  const html = buildHtml(to, verifyUrl);
+
+  // 1. Brevo — primary (free, any recipient, 300/day)
+  if (env.BREVO_API_KEY) {
+    const sent = await sendViaBrevo(to, subject, html, env.BREVO_API_KEY);
+    if (sent) {
+      console.log(`[email] ✅ Sent via Brevo → ${to}`);
+      return;
+    }
+    console.warn("[email] Brevo failed, trying Resend...");
+  }
+
+  // 2. Resend — fallback (free but only own email without domain)
   if (env.RESEND_API_KEY) {
     const sent = await sendViaResend(to, subject, html, env.RESEND_API_KEY);
     if (sent) {
-      console.log(`[email] ✅ Sent via Resend to ${to}`);
+      console.log(`[email] ✅ Sent via Resend → ${to}`);
       return;
     }
-    console.warn("[email] Resend failed, falling back to MailChannels...");
+    console.warn("[email] Resend failed.");
   }
 
-  // 2. Fallback to MailChannels
-  if (env.SMTP_EMAIL) {
-    const sent = await sendViaMailChannels(to, subject, html, env.SMTP_EMAIL);
-    if (sent) {
-      console.log(`[email] ✅ Sent via MailChannels to ${to}`);
-      return;
-    }
-    console.warn("[email] MailChannels also failed.");
-  }
-
-  // 3. Always log the link — visible in Cloudflare Worker logs dashboard
+  // 3. Always log — visible in Cloudflare Worker logs
   console.log(`[email] 🔗 MAGIC LINK for ${to} → ${verifyUrl}`);
 }

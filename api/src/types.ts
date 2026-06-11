@@ -7,6 +7,7 @@ export interface Bindings {
   SMTP_PASS: string;
   GEMINI_API_KEY: string;
   RESEND_API_KEY: string;
+  BREVO_API_KEY: string;
 }
 
 export interface Variables {
