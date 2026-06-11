@@ -33,7 +33,8 @@ app.route("/api/public", publicRouter);
 app.route("/api/surveys", surveysRouter);
 app.route("/api/surveys", responsesRouter);
 
-// Health check
+// Health check — required by the starter spec
 app.get("/", (c) => c.json({ ok: true, service: "survey-builder-api" }));
+app.get("/api/health", (c) => c.json({ status: "ok" }));
 
 export default app;
