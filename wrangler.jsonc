@@ -1,12 +1,29 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Root-level config used by the Cloudflare Workers Builds CI.
-  // The CI runs `npx wrangler deploy` from the repo root with wrangler 4.
-  //
-  // Wrangler 4 refuses workspace-root deploys, so we add "pages_build_output_dir"
-  // to tell it this is a Pages project and deploy the static frontend.
-  // The API Worker is deployed via api/wrangler.jsonc separately.
+  // Root-level wrangler config for the Cloudflare Workers Builds CI.
+  // The CI runs `npx wrangler deploy` from the repo root.
+  // By adding wrangler@3 to root devDependencies, npx uses the local v3
+  // binary (which has no workspace-root detection) instead of downloading
+  // wrangler@4 (which refuses to run in a pnpm workspace root).
+  // The CI overrides the Worker name to "docodeago-survey-builder".
+  // The canonical API config lives at api/wrangler.jsonc.
   "name": "docodeago-survey-builder",
-  "pages_build_output_dir": "web/dist",
-  "compatibility_date": "2024-07-25"
+  "main": "api/src/index.ts",
+  "compatibility_date": "2024-07-25",
+  "compatibility_flags": ["nodejs_compat"],
+  "account_id": "115ae6f7cbb2d006f14350d9db7ff9b2",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "survey-builder-db",
+      "database_id": "762d53ce-b400-4a79-9200-b4b0ed2fac4e"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "SESSIONS",
+      "id": "77e0b65fee9c457283b75a4dec03b1f5",
+      "preview_id": "9c13445e6333486f9b76c30b46f0f44a"
+    }
+  ]
 }

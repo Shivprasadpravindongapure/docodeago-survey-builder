@@ -11,6 +11,9 @@ importers:
       concurrently:
         specifier: ^8.2.2
         version: 8.2.2
+      wrangler:
+        specifier: ^3.114.17
+        version: 3.114.17(@cloudflare/workers-types@4.20260611.1)
 
   api:
     dependencies:
