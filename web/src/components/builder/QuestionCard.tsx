@@ -11,6 +11,7 @@ interface QuestionCardProps {
 
 const TYPE_LABELS: Record<QuestionType, string> = {
   short_text: "Short Text",
+  long_text: "Long Text",
   multiple_choice: "Multiple Choice",
   rating: "Rating",
 };
@@ -89,6 +90,12 @@ export function QuestionCard({ question, onUpdate, onDelete }: QuestionCardProps
           placeholder="Question label…"
           style={{ marginBottom: question.type === "multiple_choice" ? 10 : 0 }}
         />
+
+        {question.type === "long_text" && (
+          <div style={{ marginTop: 6, padding: "8px 10px", borderRadius: "var(--radius)", background: "var(--bg-3)", color: "var(--text-3)", fontSize: 12 }}>
+            📝 Respondents will see a multi-line text area
+          </div>
+        )}
 
         {question.type === "multiple_choice" && (
           <div className="field" style={{ marginTop: 8 }}>

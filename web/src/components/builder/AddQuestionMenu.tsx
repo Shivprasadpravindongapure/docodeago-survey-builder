@@ -5,10 +5,11 @@ interface AddQuestionMenuProps {
   onAdd: (type: QuestionType) => void;
 }
 
-const OPTIONS: { type: QuestionType; label: string; icon: string }[] = [
-  { type: "short_text", label: "Short text", icon: "✏️" },
-  { type: "multiple_choice", label: "Multiple choice", icon: "☑️" },
-  { type: "rating", label: "Rating", icon: "⭐" },
+const OPTIONS: { type: QuestionType; label: string; icon: string; desc: string }[] = [
+  { type: "short_text",      label: "Short text",      icon: "✏️",  desc: "Single line answer" },
+  { type: "long_text",       label: "Long text",       icon: "📝",  desc: "Paragraph answer" },
+  { type: "multiple_choice", label: "Multiple choice", icon: "☑️",  desc: "Pick one option" },
+  { type: "rating",          label: "Rating (1–5)",    icon: "⭐",  desc: "Star rating scale" },
 ];
 
 export function AddQuestionMenu({ onAdd }: AddQuestionMenuProps) {
@@ -58,7 +59,10 @@ export function AddQuestionMenu({ onAdd }: AddQuestionMenuProps) {
                 id={`add-question-${opt.type}`}
               >
                 <span className="add-question-option-icon">{opt.icon}</span>
-                {opt.label}
+                <span>
+                  <span style={{ display: "block", fontWeight: 600 }}>{opt.label}</span>
+                  <span style={{ display: "block", fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>{opt.desc}</span>
+                </span>
               </button>
             ))}
           </div>

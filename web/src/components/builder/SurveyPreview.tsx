@@ -15,13 +15,18 @@ function ReadOnlyQuestion({ question }: { question: Question }) {
             {question.label}
             {question.required === 1 && <span className="required-star"> *</span>}
           </p>
-          <textarea
-            placeholder="Your answer…"
-            rows={2}
-            disabled
-            style={{ opacity: 0.6, cursor: "default" }}
-            readOnly
-          />
+          <input type="text" placeholder="Short answer…" disabled style={{ opacity: 0.6, cursor: "default" }} readOnly />
+        </div>
+      );
+
+    case "long_text":
+      return (
+        <div className="public-question">
+          <p className="public-question-label">
+            {question.label}
+            {question.required === 1 && <span className="required-star"> *</span>}
+          </p>
+          <textarea placeholder="Long answer…" rows={3} disabled style={{ opacity: 0.6, cursor: "default", resize: "none" }} readOnly />
         </div>
       );
 
@@ -40,9 +45,7 @@ function ReadOnlyQuestion({ question }: { question: Question }) {
               </label>
             ))
           ) : (
-            <p style={{ color: "var(--text-3)", fontSize: 13, fontStyle: "italic" }}>
-              No options yet…
-            </p>
+            <p style={{ color: "var(--text-3)", fontSize: 13, fontStyle: "italic" }}>No options yet…</p>
           )}
         </div>
       );
@@ -56,9 +59,7 @@ function ReadOnlyQuestion({ question }: { question: Question }) {
           </p>
           <div className="rating-buttons">
             {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} type="button" className="rating-btn" disabled>
-                {n}
-              </button>
+              <button key={n} type="button" className="rating-btn" disabled>{n}</button>
             ))}
           </div>
         </div>

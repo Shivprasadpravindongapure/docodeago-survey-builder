@@ -22,7 +22,7 @@ export interface MagicLink {
   created_at: string;
 }
 
-export type QuestionType = "short_text" | "multiple_choice" | "rating";
+export type QuestionType = "short_text" | "long_text" | "multiple_choice" | "rating";
 
 export interface Survey {
   id: string;

@@ -1,6 +1,7 @@
 import { useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { publicApi } from "../api";
+import { LongTextQuestion } from "../components/questions/LongTextQuestion";
 import { MultipleChoiceQuestion } from "../components/questions/MultipleChoiceQuestion";
 import { RatingQuestion } from "../components/questions/RatingQuestion";
 import { ShortTextQuestion } from "../components/questions/ShortTextQuestion";
@@ -154,6 +155,14 @@ export function PublicSurveyPage() {
               <div key={q.id}>
                 {q.type === "short_text" && (
                   <ShortTextQuestion
+                    label={q.label}
+                    required={q.required === 1}
+                    value={val}
+                    onChange={(v) => handleAnswerChange(q.id, v)}
+                  />
+                )}
+                {q.type === "long_text" && (
+                  <LongTextQuestion
                     label={q.label}
                     required={q.required === 1}
                     value={val}

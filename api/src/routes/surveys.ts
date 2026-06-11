@@ -111,7 +111,7 @@ surveysRouter.post(
   zValidator(
     "json",
     z.object({
-      type: z.enum(["short_text", "multiple_choice", "rating"]),
+      type: z.enum(["short_text", "long_text", "multiple_choice", "rating"]),
       label: z.string().min(1, "Label is required"),
       options: z.array(z.string()).optional(),
       position: z.number().int().min(0),
@@ -142,7 +142,7 @@ surveysRouter.put(
   zValidator(
     "json",
     z.object({
-      type: z.enum(["short_text", "multiple_choice", "rating"]).optional(),
+      type: z.enum(["short_text", "long_text", "multiple_choice", "rating"]).optional(),
       label: z.string().min(1).optional(),
       options: z.array(z.string()).optional(),
       position: z.number().int().min(0).optional(),
