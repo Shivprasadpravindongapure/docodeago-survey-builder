@@ -1,0 +1,25 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "build": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "biome check .",
+    "check:fix": "biome check --write ."
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.2.2",
+    "hono": "^4.4.5",
+    "nanoid": "^5.0.7",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@cloudflare/workers-types": "^4.20240725.0",
+    "typescript": "^5.5.3",
+    "wrangler": "^3.64.0"
+  }
+}

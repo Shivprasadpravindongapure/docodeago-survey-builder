@@ -1,0 +1,16 @@
+{
+  "name": "docodeago-survey-builder",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter api dev\" \"pnpm --filter web dev\"",
+    "build": "pnpm --filter api build && pnpm --filter web build",
+    "typecheck": "pnpm --filter api typecheck && pnpm --filter web typecheck",
+    "check": "pnpm --filter api check && pnpm --filter web check",
+    "check:fix": "pnpm --filter api check:fix && pnpm --filter web check:fix"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
