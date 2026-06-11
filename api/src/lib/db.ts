@@ -41,6 +41,30 @@ export async function getUserById(db: D1Database, id: string): Promise<User | nu
   return db.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<User>() ?? null;
 }
 
+export async function getUserByEmail(
+  db: D1Database,
+  email: string,
+): Promise<(User & { password_hash: string | null }) | null> {
+  return (
+    db
+      .prepare("SELECT * FROM users WHERE email = ?")
+      .bind(email)
+      .first<User & { password_hash: string | null }>() ?? null
+  );
+}
+
+export async function setUserPassword(
+  db: D1Database,
+  userId: string,
+  passwordHash: string,
+): Promise<void> {
+  await db
+    .prepare("UPDATE users SET password_hash = ? WHERE id = ?")
+    .bind(passwordHash, userId)
+    .run();
+}
+
+
 // ─── Sessions ──────────────────────────────────────────────────────────────
 
 export async function createSession(

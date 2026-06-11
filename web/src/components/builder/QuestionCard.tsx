@@ -62,22 +62,11 @@ export function QuestionCard({ question, onUpdate, onDelete }: QuestionCardProps
       <div className="question-card-body">
         <div className="flex gap-2" style={{ marginBottom: 10, alignItems: "center" }}>
           <span className="type-badge">{TYPE_LABELS[question.type]}</span>
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 12,
-              color: "var(--text-3)",
-              marginLeft: "auto",
-              cursor: "pointer",
-            }}
-          >
+          <label className="required-toggle">
             <input
               type="checkbox"
               checked={question.required === 1}
               onChange={handleRequiredChange}
-              style={{ width: 14, height: 14, accentColor: "var(--brand)" }}
             />
             Required
           </label>

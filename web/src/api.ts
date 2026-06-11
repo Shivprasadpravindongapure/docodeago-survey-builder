@@ -49,19 +49,37 @@ async function request<T>(path: string, options?: RequestInit): Promise<ApiRespo
 
 // ─── Auth API ──────────────────────────────────────────────────────────────
 export const authApi = {
+  checkEmail: (email: string): Promise<ApiResponse<{ exists: boolean; hasPassword: boolean }>> =>
+    request<{ exists: boolean; hasPassword: boolean }>("/auth/check-email", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+
   magicLink: (email: string): Promise<ApiResponse<{ verifyUrl: string }>> =>
     request<{ verifyUrl: string }>("/auth/magic-link", {
       method: "POST",
       body: JSON.stringify({ email }),
     }),
 
-  verify: (token: string): Promise<ApiResponse<User>> =>
-    request<User>("/auth/verify", {
+  login: (email: string, password: string): Promise<ApiResponse<User>> =>
+    request<User>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+
+  verify: (token: string): Promise<ApiResponse<User & { hasPassword: boolean }>> =>
+    request<User & { hasPassword: boolean }>("/auth/verify", {
       method: "POST",
       body: JSON.stringify({ token }),
     }),
 
   me: (): Promise<ApiResponse<User>> => request<User>("/auth/me"),
+
+  setPassword: (password: string): Promise<ApiResponse<null>> =>
+    request<null>("/auth/set-password", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    }),
 
   logout: (): Promise<ApiResponse<null>> => request<null>("/auth/logout", { method: "POST" }),
 };

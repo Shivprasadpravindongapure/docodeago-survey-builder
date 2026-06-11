@@ -109,10 +109,18 @@ export function DashboardPage() {
     <>
       {/* Topbar */}
       <nav className="topbar">
-        <span className="topbar-logo">FormCraft</span>
-        <div className="flex gap-3">
-          <span style={{ fontSize: 13, color: "var(--text-2)" }}>{user?.email}</span>
-          <Button variant="secondary" size="sm" onClick={handleCreate} id="new-survey-btn">
+        <span className="topbar-logo">
+          <svg width="24" height="24" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <rect width="28" height="28" rx="8" fill="var(--brand)" />
+            <path d="M7 8h14M7 13h10M7 18h12" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="21" cy="18" r="4" fill="white" opacity="0.9" />
+            <path d="M19.5 18l1 1 2-2" stroke="var(--brand)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Survey-Builders
+        </span>
+        <div className="flex gap-3" style={{ alignItems: "center" }}>
+          <span style={{ fontSize: 13, color: "var(--text-3)" }}>{user?.email}</span>
+          <Button variant="primary" size="sm" onClick={handleCreate} id="new-survey-btn">
             + New Survey
           </Button>
           <Button variant="ghost" size="sm" onClick={logout} id="logout-btn">
