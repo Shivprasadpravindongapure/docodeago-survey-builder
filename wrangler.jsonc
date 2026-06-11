@@ -1,5 +1,11 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // This config is used by the Cloudflare Workers Builds CI (GitHub-connected).
+  // The CI runs `npx wrangler deploy` from the repo root — this file tells it
+  // to deploy the API Worker. The CI overrides the name to "docodeago-survey-builder".
+  //
+  // The actual API config (with full details) lives at api/wrangler.jsonc.
+  // This root file is a minimal shim for CI compatibility.
   "name": "docodeago-survey-builder",
   "main": "api/src/index.ts",
   "compatibility_date": "2024-07-25",
