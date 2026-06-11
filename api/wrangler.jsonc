@@ -4,18 +4,19 @@
   "main": "src/index.ts",
   "compatibility_date": "2024-07-25",
   "compatibility_flags": ["nodejs_compat"],
+  "account_id": "115ae6f7cbb2d006f14350d9db7ff9b2",
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "survey-builder-db",
-      "database_id": "REPLACE_WITH_REAL_D1_ID"
+      "database_id": "762d53ce-b400-4a79-9200-b4b0ed2fac4e"
     }
   ],
   "kv_namespaces": [
     {
       "binding": "SESSIONS",
-      "id": "REPLACE_WITH_REAL_KV_ID",
-      "preview_id": "REPLACE_WITH_REAL_KV_PREVIEW_ID"
+      "id": "77e0b65fee9c457283b75a4dec03b1f5",
+      "preview_id": "9c13445e6333486f9b76c30b46f0f44a"
     }
   ],
   "dev": {
