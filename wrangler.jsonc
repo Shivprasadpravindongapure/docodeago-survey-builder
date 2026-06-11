@@ -1,28 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // This config is used by the Cloudflare Workers Builds CI (GitHub-connected).
-  // The CI runs `npx wrangler deploy` from the repo root — this file tells it
-  // to deploy the API Worker. The CI overrides the name to "docodeago-survey-builder".
+  // Root-level config used by the Cloudflare Workers Builds CI.
+  // The CI runs `npx wrangler deploy` from the repo root with wrangler 4.
   //
-  // The actual API config (with full details) lives at api/wrangler.jsonc.
-  // This root file is a minimal shim for CI compatibility.
+  // Wrangler 4 refuses workspace-root deploys, so we add "pages_build_output_dir"
+  // to tell it this is a Pages project and deploy the static frontend.
+  // The API Worker is deployed via api/wrangler.jsonc separately.
   "name": "docodeago-survey-builder",
-  "main": "api/src/index.ts",
-  "compatibility_date": "2024-07-25",
-  "compatibility_flags": ["nodejs_compat"],
-  "account_id": "115ae6f7cbb2d006f14350d9db7ff9b2",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "survey-builder-db",
-      "database_id": "762d53ce-b400-4a79-9200-b4b0ed2fac4e"
-    }
-  ],
-  "kv_namespaces": [
-    {
-      "binding": "SESSIONS",
-      "id": "77e0b65fee9c457283b75a4dec03b1f5",
-      "preview_id": "9c13445e6333486f9b76c30b46f0f44a"
-    }
-  ]
+  "pages_build_output_dir": "web/dist",
+  "compatibility_date": "2024-07-25"
 }
