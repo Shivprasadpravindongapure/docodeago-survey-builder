@@ -2578,3 +2578,279 @@ textarea {
 .aqm-icon { font-size: 22px; line-height: 1; }
 .aqm-label { font-weight: 600; font-size: 11px; text-align: center; line-height: 1.2; }
 
+/* ═══════════════════════════════════════════════════════════════
+   MULTIPLE CHOICE — poll-style big tap rows
+═══════════════════════════════════════════════════════════════ */
+.mc-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.mc-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  user-select: none;
+  font-size: 14px;
+  color: var(--text-2);
+  transition: border-color 0.18s, background 0.18s, color 0.18s, box-shadow 0.18s;
+  position: relative;
+}
+
+.mc-option:hover {
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.055);
+  color: var(--text);
+}
+
+.mc-option-selected {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
+  color: var(--text);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+.mc-radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.mc-radio-selected {
+  border-color: var(--brand);
+  background: var(--brand);
+}
+
+.mc-radio-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.mc-option-text { flex: 1; font-weight: 500; line-height: 1.4; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILDER — Header actions, toast, empty state, preview label
+═══════════════════════════════════════════════════════════════ */
+.builder-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.builder-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.builder-action-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  border-color: rgba(255,255,255,0.14);
+}
+
+.builder-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.builder-action-share:hover { border-color: #4ade80; color: #4ade80; }
+.builder-action-live:hover  { border-color: var(--brand); color: var(--brand); }
+
+/* Toast */
+.builder-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 42, 0.96);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 99px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 9999;
+  animation: toastIn 0.2s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Builder empty state */
+.builder-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  margin-top: 12px;
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+/* Preview label strip */
+.builder-preview-label {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SURVEY PREVIEW — mini brand bar + question cards inside builder
+═══════════════════════════════════════════════════════════════ */
+.preview-brand-bar {
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-brand-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px,
+    transparent 1px, transparent 12px
+  );
+  pointer-events: none;
+}
+
+.preview-logo {
+  height: 32px;
+  max-width: 100px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.1);
+  padding: 2px 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.preview-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  position: relative;
+  z-index: 1;
+  line-height: 1.25;
+}
+
+.preview-desc {
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  position: relative;
+  z-index: 1;
+  line-height: 1.5;
+}
+
+.preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+.preview-q-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  animation: slideUp 0.25s cubic-bezier(0.4,0,0.2,1) both;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BTN SPINNER (shared)
+═══════════════════════════════════════════════════════════════ */
+.btn-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border);
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile public survey
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .pub-inner { padding: 20px 14px; }
+  .pub-question-card { padding: 16px 14px 14px; gap: 10px; }
+  .pub-brand-bar { padding: 28px 16px 22px; }
+  .pub-brand-title { font-size: 1.3rem; }
+  .nps-btn { width: 38px; height: 38px; font-size: 12px; }
+  .yesno-buttons { flex-direction: column; }
+  .pub-thankyou-actions { max-width: 100%; }
+}
+
+@media (max-width: 900px) {
+  .builder-layout { flex-direction: column; }
+  .builder-right { display: none; }
+  .builder-header-actions .builder-action-btn span { display: none; }
+}
+
+
