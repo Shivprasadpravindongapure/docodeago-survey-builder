@@ -13,7 +13,15 @@ const TYPE_LABELS: Record<QuestionType, string> = {
   short_text: "Short Text",
   long_text: "Long Text",
   multiple_choice: "Multiple Choice",
-  rating: "Rating",
+  rating: "⭐ Rating",
+  yes_no: "Yes / No",
+  nps: "NPS",
+  dropdown: "Dropdown",
+  scale: "Scale",
+  date: "Date",
+  email: "Email",
+  phone: "Phone",
+  checkbox: "Checkboxes",
 };
 
 export function QuestionCard({ question, onUpdate, onDelete }: QuestionCardProps) {
