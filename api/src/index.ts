@@ -18,16 +18,23 @@ app.get("/", (c) => c.json({ ok: true, service: "survey-builder-api" }));
 app.use(
   "/api/*",
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:4173",
-      "https://docodeago-survey-builder.pages.dev",
-    ],
+    origin: (origin) => {
+      if (!origin) return "*";
+      if (
+        origin.startsWith("http://localhost") ||
+        origin.endsWith(".pages.dev") ||
+        origin === "https://docodeago-survey-builder.pages.dev"
+      ) {
+        return origin;
+      }
+      return null;
+    },
     allowHeaders: ["Content-Type"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   }),
 );
+
 
 // ── Auth middleware ────────────────────────────────────────────────────────
 // Skips /api/auth and /api/public paths internally
