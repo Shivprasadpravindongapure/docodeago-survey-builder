@@ -1,16 +1,16 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { surveysApi } from "../api";
+import { authApi, surveysApi } from "../api";
 import { Button } from "../components/ui/Button";
 import { useAuth } from "../hooks/useAuth";
 import type { SurveyWithResponseCount } from "../types";
 
+// ─── Toast ────────────────────────────────────────────────────────────────────
 function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 2000);
+    const t = setTimeout(onDone, 2500);
     return () => clearTimeout(t);
   }, [onDone]);
-
   return (
     <div className="toast-container">
       <div className="toast">{message}</div>
@@ -18,36 +18,13 @@ function Toast({ message, onDone }: { message: string; onDone: () => void }) {
   );
 }
 
+// ─── Empty State ──────────────────────────────────────────────────────────────
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="empty-state">
-      <svg
-        width="120"
-        height="120"
-        viewBox="0 0 120 120"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <rect
-          x="20"
-          y="15"
-          width="80"
-          height="90"
-          rx="8"
-          fill="var(--bg-3)"
-          stroke="var(--border)"
-          strokeWidth="1.5"
-        />
-        <rect x="32" y="32" width="56" height="6" rx="3" fill="var(--brand)" opacity="0.7" />
-        <rect x="32" y="46" width="42" height="5" rx="2.5" fill="var(--border)" />
-        <rect x="32" y="58" width="50" height="5" rx="2.5" fill="var(--border)" />
-        <rect x="32" y="70" width="38" height="5" rx="2.5" fill="var(--border)" />
-        <circle cx="88" cy="88" r="18" fill="var(--brand)" />
-        <path d="M82 88h12M88 82v12" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-      </svg>
+      <div style={{ fontSize: 64, lineHeight: 1 }}>📋</div>
       <h3>No surveys yet</h3>
-      <p>Create your first survey and start collecting responses in minutes.</p>
+      <p>Create your first survey and start collecting branded responses in minutes.</p>
       <Button variant="primary" onClick={onCreate} id="create-first-survey-btn">
         + Create your first survey
       </Button>
@@ -55,62 +32,211 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
   );
 }
 
+// ─── Set Password Modal ───────────────────────────────────────────────────────
+function SetPasswordModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password !== confirm) { setError("Passwords do not match."); return; }
+    setLoading(true);
+    const res = await authApi.setPassword(password);
+    setLoading(false);
+    if (res.ok) {
+      onSuccess();
+    } else {
+      setError(res.error || "Failed to save password. Please try again.");
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <h3 className="modal-title">🔑 Set a Password</h3>
+            <p className="modal-subtitle">Sign in with email + password next time — no magic link needed.</p>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="field" style={{ marginBottom: 14 }}>
+            <label htmlFor="modal-password">New password <span style={{ color: "var(--text-3)", fontWeight: 400 }}>(min 8 chars)</span></label>
+            <div style={{ position: "relative" }}>
+              <input
+                id="modal-password"
+                type={showPw ? "text" : "password"}
+                className="input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create a strong password"
+                autoFocus
+                required
+              />
+              <button type="button" onClick={() => setShowPw(v => !v)}
+                style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", fontSize: 13 }}>
+                {showPw ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
+
+          <div className="field" style={{ marginBottom: 16 }}>
+            <label htmlFor="modal-confirm">Confirm password</label>
+            <input
+              id="modal-confirm"
+              type={showPw ? "text" : "password"}
+              className="input"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Repeat your password"
+              required
+            />
+          </div>
+
+          {error && <p className="auth-error" style={{ marginBottom: 14 }}>{error}</p>}
+
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <Button variant="ghost" type="button" onClick={onClose}>Cancel</Button>
+            <Button variant="primary" type="submit" disabled={loading} id="save-password-btn">
+              {loading ? <span className="btn-spinner" style={{ borderTopColor: "#fff" }} /> : "Save password"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Survey Card ──────────────────────────────────────────────────────────────
+function SurveyCard({
+  survey,
+  onEdit,
+  onShare,
+  onResponses,
+  onDelete,
+}: {
+  survey: SurveyWithResponseCount;
+  onEdit: () => void;
+  onShare: () => void;
+  onResponses: () => void;
+  onDelete: () => void;
+}) {
+  const created = new Date(survey.created_at).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+
+  return (
+    <article
+      className="survey-card"
+      style={{ "--survey-color": survey.brand_color } as React.CSSProperties}
+    >
+      {/* Color accent strip */}
+      <div className="survey-card-accent" />
+
+      <div className="survey-card-body">
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+          <p className="survey-card-title">{survey.title}</p>
+          <div className="survey-card-dot" style={{ background: survey.brand_color }} />
+        </div>
+
+        <div className="survey-card-stats">
+          <span className="stat-pill">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M3 4h10M3 8h8M3 12h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            {survey.question_count} question{survey.question_count !== 1 ? "s" : ""}
+          </span>
+          <span className="stat-pill stat-pill-responses">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 3v3l2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            {survey.response_count} response{survey.response_count !== 1 ? "s" : ""}
+          </span>
+        </div>
+
+        <p className="survey-card-date">Created {created}</p>
+      </div>
+
+      <div className="survey-card-actions">
+        <button className="card-action-btn card-action-edit" onClick={onEdit} id={`edit-${survey.id}`} title="Edit survey">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M11 2l3 3-9 9H2v-3L11 2z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/></svg>
+          Edit
+        </button>
+        <button className="card-action-btn card-action-share" onClick={onShare} id={`share-${survey.id}`} title="Copy share link">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M10 1l5 5-5 5M15 6H6a4 4 0 0 0-4 4v1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Share
+        </button>
+        <button className="card-action-btn card-action-responses" onClick={onResponses} id={`responses-${survey.id}`} title="View responses">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 12h1.5M2 8h3M2 4h5M7 12h7M7 8h7M7 4h7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+          Responses
+        </button>
+        <button className="card-action-btn card-action-delete" onClick={onDelete} id={`delete-${survey.id}`} title="Delete survey">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
+    </article>
+  );
+}
+
+// ─── Dashboard Page ───────────────────────────────────────────────────────────
 export function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [surveys, setSurveys] = useState<SurveyWithResponseCount[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
     surveysApi.list().then((res) => {
-      if (res.ok) {
-        setSurveys(res.data);
-      }
+      if (res.ok) setSurveys(res.data);
       setLoading(false);
     });
   }, []);
 
+  // Close user menu on outside click
+  useEffect(() => {
+    if (!showUserMenu) return;
+    const handler = () => setShowUserMenu(false);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [showUserMenu]);
+
   const handleCreate = async () => {
     const res = await surveysApi.create({ title: "Untitled Survey" });
-    if (res.ok) {
-      navigate({ to: "/builder/$id", params: { id: res.data.id } });
-    }
+    if (res.ok) navigate({ to: "/builder/$id", params: { id: res.data.id } });
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm("Delete this survey? This cannot be undone.")) return;
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this survey? All responses will be lost.")) return;
     const res = await surveysApi.delete(id);
     if (res.ok) {
       setSurveys((prev) => prev.filter((s) => s.id !== id));
+      setToast("🗑️ Survey deleted");
     }
   };
 
-  const handleShare = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleShare = (id: string) => {
     const url = `${window.location.origin}/s/${id}`;
-    navigator.clipboard.writeText(url).then(() => {
-      setToast("🔗 Link copied!");
-    });
+    navigator.clipboard.writeText(url).then(() => setToast("🔗 Share link copied!"));
   };
 
-  const handleEdit = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate({ to: "/builder/$id", params: { id } });
-  };
-
-  const handleResponses = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigate({ to: "/surveys/$id/responses", params: { id } });
-  };
+  const totalResponses = surveys.reduce((sum, s) => sum + s.response_count, 0);
 
   return (
     <>
-      {/* Topbar */}
+      {/* ── Topbar ── */}
       <nav className="topbar">
         <span className="topbar-logo">
-          <svg width="24" height="24" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 28 28" fill="none" aria-hidden="true">
             <rect width="28" height="28" rx="8" fill="var(--brand)" />
             <path d="M7 8h14M7 13h10M7 18h12" stroke="white" strokeWidth="2" strokeLinecap="round" />
             <circle cx="21" cy="18" r="4" fill="white" opacity="0.9" />
@@ -118,29 +244,90 @@ export function DashboardPage() {
           </svg>
           Survey-Builders
         </span>
-        <div className="flex gap-3" style={{ alignItems: "center" }}>
-          <span style={{ fontSize: 13, color: "var(--text-3)" }}>{user?.email}</span>
+
+        <div className="topbar-right">
           <Button variant="primary" size="sm" onClick={handleCreate} id="new-survey-btn">
-            + New Survey
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            New Survey
           </Button>
-          <Button variant="ghost" size="sm" onClick={logout} id="logout-btn">
-            Sign out
-          </Button>
+
+          {/* User avatar / menu */}
+          <div className="user-menu-wrapper" onClick={(e) => { e.stopPropagation(); setShowUserMenu(v => !v); }}>
+            <div className="user-avatar" title={user?.email}>
+              {user?.email?.[0]?.toUpperCase() ?? "?"}
+            </div>
+            {showUserMenu && (
+              <div className="user-dropdown">
+                <div className="user-dropdown-header">
+                  <p className="user-dropdown-email">{user?.email}</p>
+                  <p className="user-dropdown-role">{(user as any)?.hasPassword ? "Password + magic link" : "Magic link only"}</p>
+                </div>
+                <div className="user-dropdown-divider" />
+                <button
+                  className="user-dropdown-item"
+                  onClick={(e) => { e.stopPropagation(); setShowUserMenu(false); setShowPasswordModal(true); }}
+                  id="set-password-menu-btn"
+                >
+                  🔑 {(user as any)?.hasPassword ? "Change password" : "Set a password"}
+                </button>
+                <button
+                  className="user-dropdown-item user-dropdown-item-danger"
+                  onClick={(e) => { e.stopPropagation(); setShowUserMenu(false); logout(); }}
+                  id="logout-btn"
+                >
+                  ← Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
+      {/* ── Page body ── */}
       <div className="page-container">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+        {/* Stats bar */}
+        {!loading && surveys.length > 0 && (
+          <div className="dash-stats">
+            <div className="dash-stat">
+              <span className="dash-stat-num">{surveys.length}</span>
+              <span className="dash-stat-label">Survey{surveys.length !== 1 ? "s" : ""}</span>
+            </div>
+            <div className="dash-stat-divider" />
+            <div className="dash-stat">
+              <span className="dash-stat-num">{totalResponses}</span>
+              <span className="dash-stat-label">Total responses</span>
+            </div>
+            <div className="dash-stat-divider" />
+            <div className="dash-stat">
+              <span className="dash-stat-num" style={{ color: (user as any)?.hasPassword ? "#4ade80" : "#facc15" }}>
+                {(user as any)?.hasPassword ? "✓" : "!"}
+              </span>
+              <span className="dash-stat-label">
+                {(user as any)?.hasPassword
+                  ? "Password set"
+                  : <button className="dash-stat-link" onClick={() => setShowPasswordModal(true)}>Set a password →</button>
+                }
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Section header */}
+        <div className="dash-section-header">
           <div>
-            <h1 style={{ fontSize: "1.6rem" }}>Your Surveys</h1>
-            <p style={{ color: "var(--text-3)", fontSize: 14, marginTop: 4 }}>
-              {surveys.length} survey{surveys.length !== 1 ? "s" : ""}
-            </p>
+            <h1 className="dash-title">Your Surveys</h1>
+            {!loading && surveys.length > 0 && (
+              <p className="dash-subtitle">{surveys.length} survey{surveys.length !== 1 ? "s" : ""} · {totalResponses} response{totalResponses !== 1 ? "s" : ""} total</p>
+            )}
           </div>
         </div>
 
+        {/* Content */}
         {loading ? (
-          <div className="flex-center" style={{ minHeight: 300 }}>
+          <div className="flex-center" style={{ minHeight: 320 }}>
             <div className="spinner" />
           </div>
         ) : surveys.length === 0 ? (
@@ -148,55 +335,30 @@ export function DashboardPage() {
         ) : (
           <div className="survey-grid">
             {surveys.map((s) => (
-              <article
+              <SurveyCard
                 key={s.id}
-                className="survey-card"
-                style={{ "--survey-color": s.brand_color } as React.CSSProperties}
-              >
-                <p className="survey-card-title">{s.title}</p>
-                <p className="survey-card-meta">
-                  {s.question_count} question{s.question_count !== 1 ? "s" : ""} ·{" "}
-                  {s.response_count} response{s.response_count !== 1 ? "s" : ""}
-                </p>
-                <div className="survey-card-actions">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={(e) => handleEdit(s.id, e)}
-                    id={`edit-survey-${s.id}`}
-                  >
-                    ✏️ Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => handleShare(s.id, e)}
-                    id={`share-survey-${s.id}`}
-                  >
-                    🔗 Share
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => handleResponses(s.id, e)}
-                    id={`responses-survey-${s.id}`}
-                  >
-                    📊 Responses
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={(e) => handleDelete(s.id, e)}
-                    id={`delete-survey-${s.id}`}
-                  >
-                    🗑
-                  </Button>
-                </div>
-              </article>
+                survey={s}
+                onEdit={() => navigate({ to: "/builder/$id", params: { id: s.id } })}
+                onShare={() => handleShare(s.id)}
+                onResponses={() => navigate({ to: "/surveys/$id/responses", params: { id: s.id } })}
+                onDelete={() => handleDelete(s.id)}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {/* ── Modals / Overlays ── */}
+      {showPasswordModal && (
+        <SetPasswordModal
+          onClose={() => setShowPasswordModal(false)}
+          onSuccess={() => {
+            setShowPasswordModal(false);
+            setToast("✅ Password saved! You can now sign in with email + password.");
+            refreshUser();
+          }}
+        />
+      )}
 
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </>
