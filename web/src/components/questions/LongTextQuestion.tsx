@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 interface LongTextQuestionProps {
   label: string;
   required: boolean;
@@ -7,14 +9,21 @@ interface LongTextQuestionProps {
 }
 
 export function LongTextQuestion({ label, required, value, onChange, id }: LongTextQuestionProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
     <div className="question-block">
-      <label className="question-label">
+      <label htmlFor={inputId} className="question-label">
         {label}
-        {required && <span className="required-mark" aria-hidden="true"> *</span>}
+        {required && (
+          <span className="required-mark" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
       </label>
       <textarea
-        id={id}
+        id={inputId}
         className="input"
         value={value}
         onChange={(e) => onChange(e.target.value)}

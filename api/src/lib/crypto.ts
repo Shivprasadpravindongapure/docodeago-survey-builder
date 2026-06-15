@@ -26,13 +26,9 @@ export async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const salt = crypto.getRandomValues(new Uint8Array(16));
 
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(password),
-    ALG,
-    false,
-    ["deriveBits"],
-  );
+  const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(password), ALG, false, [
+    "deriveBits",
+  ]);
 
   const bits = await crypto.subtle.deriveBits(
     { name: ALG, hash: "SHA-256", salt, iterations: ITERATIONS },
@@ -51,13 +47,9 @@ export async function verifyPassword(password: string, stored: string): Promise<
     const salt = hexToBytes(saltHex);
     const encoder = new TextEncoder();
 
-    const keyMaterial = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(password),
-      ALG,
-      false,
-      ["deriveBits"],
-    );
+    const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(password), ALG, false, [
+      "deriveBits",
+    ]);
 
     const bits = await crypto.subtle.deriveBits(
       { name: ALG, hash: "SHA-256", salt, iterations: ITERATIONS },

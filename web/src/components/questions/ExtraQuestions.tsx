@@ -1,64 +1,146 @@
-interface DateProps {
-  label: string; required: boolean; value: string; onChange: (v: string) => void;
+import { useId } from "react";
+
+interface Props {
+  label: string;
+  required: boolean;
+  value: string;
+  onChange: (value: string) => void;
+  id?: string;
 }
-export function DateQuestion({ label, required, value, onChange }: DateProps) {
+
+export function EmailQuestion({ label, required, value, onChange, id }: Props) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
-    <div className="public-question">
-      <p className="public-question-label">{label}{required && <span className="required-star"> *</span>}</p>
-      <input type="date" className="input" value={value} onChange={(e) => onChange(e.target.value)} required={required} />
+    <div className="question-block">
+      <label htmlFor={inputId} className="question-label">
+        {label}
+        {required && (
+          <span className="required-mark" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </label>
+      <input
+        id={inputId}
+        type="email"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        placeholder="your@email.com"
+        autoComplete="email"
+        inputMode="email"
+      />
+      {value && !value.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) && (
+        <p className="pub-field-error" role="alert">
+          Please enter a valid email address
+        </p>
+      )}
     </div>
   );
 }
 
-interface EmailQProps {
-  label: string; required: boolean; value: string; onChange: (v: string) => void;
-}
-export function EmailQuestion({ label, required, value, onChange }: EmailQProps) {
+export function PhoneQuestion({ label, required, value, onChange, id }: Props) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
-    <div className="public-question">
-      <p className="public-question-label">{label}{required && <span className="required-star"> *</span>}</p>
-      <input type="email" className="input" value={value} placeholder="you@example.com" onChange={(e) => onChange(e.target.value)} required={required} />
+    <div className="question-block">
+      <label htmlFor={inputId} className="question-label">
+        {label}
+        {required && (
+          <span className="required-mark" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </label>
+      <input
+        id={inputId}
+        type="tel"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        placeholder="+1 (555) 000-0000"
+        autoComplete="tel"
+        inputMode="tel"
+      />
     </div>
   );
 }
 
-interface PhoneProps {
-  label: string; required: boolean; value: string; onChange: (v: string) => void;
-}
-export function PhoneQuestion({ label, required, value, onChange }: PhoneProps) {
+export function DateQuestion({ label, required, value, onChange, id }: Props) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
   return (
-    <div className="public-question">
-      <p className="public-question-label">{label}{required && <span className="required-star"> *</span>}</p>
-      <input type="tel" className="input" value={value} placeholder="+91 98765 43210" onChange={(e) => onChange(e.target.value)} required={required} />
+    <div className="question-block">
+      <label htmlFor={inputId} className="question-label">
+        {label}
+        {required && (
+          <span className="required-mark" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </label>
+      <input
+        id={inputId}
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required={required}
+        min="2000-01-01"
+        max="2100-12-31"
+        style={{ cursor: "pointer" }}
+      />
     </div>
   );
 }
 
-interface CheckboxProps {
-  label: string; required: boolean; options: string[]; value: string; onChange: (v: string) => void;
-}
-export function CheckboxQuestion({ label, required, options, value, onChange }: CheckboxProps) {
-  const selected = value ? value.split("|||") : [];
+export function CheckboxQuestion({
+  label,
+  required,
+  value,
+  onChange,
+  options,
+}: Props & { options: string[] }) {
+  const selected: string[] = value
+    ? value
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+
   const toggle = (opt: string) => {
-    const next = selected.includes(opt) ? selected.filter((o) => o !== opt) : [...selected, opt];
-    onChange(next.join("|||"));
+    const next = selected.includes(opt) ? selected.filter((s) => s !== opt) : [...selected, opt];
+    onChange(next.join(", "));
   };
+
   return (
-    <div className="public-question">
-      <p className="public-question-label">{label}{required && <span className="required-star"> *</span>}</p>
-      <p style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 12 }}>Select all that apply</p>
-      <div className="checkbox-list">
-        {options.map((opt) => {
-          const checked = selected.includes(opt);
-          return (
-            <label key={opt} className={`checkbox-item${checked ? " checked" : ""}`}>
-              <span className="checkbox-box">{checked && "✓"}</span>
-              {opt}
-              <input type="checkbox" checked={checked} onChange={() => toggle(opt)} style={{ display: "none" }} />
-            </label>
-          );
-        })}
+    <fieldset className="question-block" style={{ border: "none", padding: 0, margin: 0 }}>
+      <legend className="question-label">
+        {label}
+        {required && (
+          <span className="required-mark" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </legend>
+      <div className="checkbox-options">
+        {options.map((opt) => (
+          <button
+            key={opt}
+            type="button"
+            className={`checkbox-option${selected.includes(opt) ? " checked" : ""}`}
+            onClick={() => toggle(opt)}
+            aria-pressed={selected.includes(opt)}
+          >
+            <span className="checkbox-box" aria-hidden="true" />
+            {opt}
+          </button>
+        ))}
       </div>
-    </div>
+    </fieldset>
   );
 }

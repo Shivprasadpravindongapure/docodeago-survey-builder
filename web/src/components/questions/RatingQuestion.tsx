@@ -1,32 +1,54 @@
-interface RatingQuestionProps {
+import { useId } from "react";
+
+interface Props {
   label: string;
   required: boolean;
   value: string;
   onChange: (value: string) => void;
 }
 
-export function RatingQuestion({ label, required, value, onChange }: RatingQuestionProps) {
+const STARS = [1, 2, 3, 4, 5];
+
+export function RatingQuestion({ label, required, value, onChange }: Props) {
+  const groupId = useId();
+  const current = Number.parseInt(value) || 0;
+
   return (
-    <div className="public-question">
-      <p className="public-question-label">
+    <fieldset className="question-block" style={{ border: "none", padding: 0, margin: 0 }}>
+      <legend className="question-label">
         {label}
-        {required && <span className="required-star"> *</span>}
-      </p>
-      <div className="rating-buttons">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
+        {required && (
+          <span className="required-mark" aria-hidden="true">
+            {" "}
+            *
+          </span>
+        )}
+      </legend>
+      <div className="rating-stars" id={groupId}>
+        {STARS.map((n) => (
+          <label
             key={n}
-            type="button"
-            className={`rating-btn${value === String(n) ? " active" : ""}`}
-            onClick={() => onChange(String(n))}
-            aria-label={`Rate ${n} out of 5`}
-            aria-pressed={value === String(n)}
-            id={`rating-${n}-for-${label.replace(/\s+/g, "-").toLowerCase()}`}
+            className={`star-btn${n <= current ? " active" : ""}`}
+            title={`${n} star${n !== 1 ? "s" : ""}`}
+            style={{ cursor: "pointer" }}
           >
-            {n}
-          </button>
+            <input
+              type="radio"
+              name={`rating-${groupId}`}
+              value={n}
+              checked={current === n}
+              onChange={() => onChange(current === n ? "" : String(n))}
+              style={{ position: "absolute", opacity: 0, width: 0, height: 0 }}
+            />
+            ⭐
+          </label>
         ))}
       </div>
-    </div>
+      {current > 0 && (
+        <p style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4 }}>
+          {current} / 5 stars selected
+        </p>
+      )}
+    </fieldset>
   );
 }

@@ -35,7 +35,6 @@ app.use(
   }),
 );
 
-
 // ── Auth middleware ────────────────────────────────────────────────────────
 // Skips /api/auth and /api/public paths internally
 app.use("/api/*", authMiddleware);

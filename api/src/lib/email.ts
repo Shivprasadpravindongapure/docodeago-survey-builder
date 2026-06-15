@@ -115,11 +115,7 @@ function buildHtml(to: string, verifyUrl: string): string {
 }
 
 // ── Main export ────────────────────────────────────────────────────────────
-export async function sendMagicLinkEmail(
-  to: string,
-  token: string,
-  env: Bindings,
-): Promise<void> {
+export async function sendMagicLinkEmail(to: string, token: string, env: Bindings): Promise<void> {
   const verifyUrl = `${PAGES_URL}/verify?token=${token}`;
   const subject = `Sign in to ${APP_NAME}`;
   const html = buildHtml(to, verifyUrl);

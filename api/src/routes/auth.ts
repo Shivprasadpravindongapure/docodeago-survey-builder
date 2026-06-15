@@ -1,7 +1,9 @@
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
+import { hashPassword, verifyPassword } from "../lib/crypto";
 import {
   consumeMagicLink,
   createMagicLink,
@@ -13,9 +15,7 @@ import {
   upsertUser,
 } from "../lib/db";
 import { sendMagicLinkEmail } from "../lib/email";
-import { hashPassword, verifyPassword } from "../lib/crypto";
 import type { AppEnv } from "../types";
-import type { Context } from "hono";
 
 const authRouter = new Hono<AppEnv>();
 
@@ -44,7 +44,7 @@ authRouter.post(
       ok: true,
       data: {
         exists: !!user,
-        hasPassword: !!(user?.password_hash),
+        hasPassword: !!user?.password_hash,
       },
     });
   },
@@ -117,7 +117,7 @@ authRouter.post(
     const fullUser = await getUserByEmail(c.env.DB, email);
     return c.json({
       ok: true,
-      data: { ...user, hasPassword: !!(fullUser?.password_hash) },
+      data: { ...user, hasPassword: !!fullUser?.password_hash },
     });
   },
 );
@@ -155,7 +155,7 @@ authRouter.get("/me", async (c) => {
 
   // Also return hasPassword so the dashboard can prompt if needed
   const fullUser = await getUserByEmail(c.env.DB, user.email);
-  return c.json({ ok: true, data: { ...user, hasPassword: !!(fullUser?.password_hash) } });
+  return c.json({ ok: true, data: { ...user, hasPassword: !!fullUser?.password_hash } });
 });
 
 // ── POST /logout ──

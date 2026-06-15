@@ -32,10 +32,15 @@ async function request<T>(path: string, options?: RequestInit): Promise<ApiRespo
     const json = await res.json();
 
     if (!res.ok) {
-      return {
-        ok: false,
-        error: (json as { error?: string }).error ?? `HTTP ${res.status}`,
-      };
+      // zod validation errors come back as objects — stringify them
+      const raw = (json as { error?: unknown }).error;
+      const msg =
+        typeof raw === "string"
+          ? raw
+          : raw
+            ? `Validation error (HTTP ${res.status})`
+            : `HTTP ${res.status}`;
+      return { ok: false, error: msg };
     }
 
     return json as ApiResponse<T>;
