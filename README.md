@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="./screenshot.png" alt="Survey-Builders — Survey Builder App" width="100%" style="border-radius:12px" />
-
 # 📋 Survey-Builders
 
 **A professional branded survey builder — create, share & analyse responses in minutes.**
@@ -9,6 +7,10 @@
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-docodeago--survey--builder.pages.dev-6366f1?style=for-the-badge&labelColor=0f0f13)](https://docodeago-survey-builder.pages.dev)
 [![Deploy Status](https://img.shields.io/badge/Deployed-Cloudflare-orange?style=for-the-badge&logo=cloudflare&logoColor=white)](https://docodeago-survey-builder.pages.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
+<img src="./dashboard-screenshot.png" alt="Dashboard View" width="100%" style="border-radius:12px; margin-top: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
+<br />
+<img src="./builder-screenshot.png" alt="Survey Builder Interface" width="100%" style="border-radius:12px; margin-top: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);" />
 
 </div>
 
