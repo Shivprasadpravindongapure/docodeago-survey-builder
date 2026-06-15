@@ -412,7 +412,6 @@ export function PublicSurveyPage() {
   const answered = sorted.filter((q) => (answers[q.id] ?? "").trim() !== "").length;
   const progress = sorted.length > 0 ? Math.round((answered / sorted.length) * 100) : 0;
   const shareUrl = `${window.location.origin}/s/${surveyId}`;
-  const waUrl = `https://wa.me/?text=${encodeURIComponent(`Fill out "${survey.title}": ${shareUrl}`)}`;
 
   // ── Thank you screen ──
   if (submitted)
