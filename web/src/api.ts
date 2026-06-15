@@ -16,7 +16,7 @@ import type {
 
 // In local dev, Vite proxies /api/* → Worker (see vite.config.ts)
 // In production Pages, VITE_API_BASE_URL must point to the live Worker
-const BASE = `${import.meta.env.VITE_API_BASE_URL ?? ""}/api`;
+const BASE = `${import.meta.env.VITE_API_BASE_URL ?? "https://docodeago-survey-builder-api.prasaddongapure7660.workers.dev"}/api`;
 
 async function request<T>(path: string, options?: RequestInit): Promise<ApiResponse<T>> {
   try {
