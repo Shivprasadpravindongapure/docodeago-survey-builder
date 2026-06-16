@@ -2,6 +2,8 @@ import type { Bindings } from "../types";
 
 const APP_NAME = "Survey-Builders";
 const PAGES_URL = "https://docodeago-survey-builder.pages.dev";
+// Brevo sends FROM their own domain automatically (brevosend.com) — no sender verification needed
+const BREVO_SENDER = { name: APP_NAME, email: "prasaddongapure7660@gmail.com" };
 
 // ── Resend (primary — works to ANY email with onboarding@resend.dev sender) ──
 async function sendViaResend(
@@ -32,7 +34,7 @@ async function sendViaResend(
   return res.ok;
 }
 
-// ── Brevo (fallback — 300 emails/day free, sender must be verified in Brevo) ──
+// ── Brevo (primary — sends via brevosend.com) ──
 async function sendViaBrevo(
   to: string,
   subject: string,
@@ -46,7 +48,7 @@ async function sendViaBrevo(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      sender: { name: APP_NAME, email: "noreply@sendinblue.com" },
+      sender: BREVO_SENDER,
       to: [{ email: to }],
       subject,
       htmlContent: html,
@@ -129,24 +131,24 @@ export async function sendMagicLinkEmail(to: string, token: string, env: Binding
 
   console.log(`[email] Sending magic link to ${to}`);
 
-  // 1. Resend — primary (free, works to ANY email with onboarding@resend.dev)
-  if (env.RESEND_API_KEY) {
-    const sent = await sendViaResend(to, subject, html, env.RESEND_API_KEY);
-    if (sent) {
-      console.log(`[email] ✅ Sent via Resend → ${to}`);
-      return;
-    }
-    console.warn("[email] Resend failed, trying Brevo...");
-  }
-
-  // 2. Brevo — fallback (free but sender must be verified in Brevo dashboard)
+  // 1. Brevo — primary (free, works beautifully with their default domain)
   if (env.BREVO_API_KEY) {
     const sent = await sendViaBrevo(to, subject, html, env.BREVO_API_KEY);
     if (sent) {
       console.log(`[email] ✅ Sent via Brevo → ${to}`);
       return;
     }
-    console.warn("[email] Brevo also failed.");
+    console.warn("[email] Brevo failed, trying Resend...");
+  }
+
+  // 2. Resend — fallback (works to any email with onboarding@resend.dev sender)
+  if (env.RESEND_API_KEY) {
+    const sent = await sendViaResend(to, subject, html, env.RESEND_API_KEY);
+    if (sent) {
+      console.log(`[email] ✅ Sent via Resend → ${to}`);
+      return;
+    }
+    console.warn("[email] Resend also failed.");
   }
 
   // 3. Last resort — log the link (visible in Cloudflare Worker logs)
