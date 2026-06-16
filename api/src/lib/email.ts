@@ -2,36 +2,8 @@ import type { Bindings } from "../types";
 
 const APP_NAME = "Survey-Builders";
 const PAGES_URL = "https://docodeago-survey-builder.pages.dev";
-const SENDER_EMAIL = "prasaddongapure7660@gmail.com";
 
-// ── Brevo (primary — 300 emails/day free, any recipient) ──────────────────
-async function sendViaBrevo(
-  to: string,
-  subject: string,
-  html: string,
-  apiKey: string,
-): Promise<boolean> {
-  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
-    method: "POST",
-    headers: {
-      "api-key": apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      sender: { name: APP_NAME, email: SENDER_EMAIL },
-      to: [{ email: to }],
-      subject,
-      htmlContent: html,
-    }),
-  });
-  if (!res.ok) {
-    const err = await res.text().catch(() => "");
-    console.error(`[email] Brevo error ${res.status}: ${err}`);
-  }
-  return res.ok || res.status === 201;
-}
-
-// ── Resend (fallback — 100 emails/day, only own email on free tier) ────────
+// ── Resend (primary — works to ANY email with onboarding@resend.dev sender) ──
 async function sendViaResend(
   to: string,
   subject: string,
@@ -51,7 +23,42 @@ async function sendViaResend(
       html,
     }),
   });
+  const body = await res.text().catch(() => "");
+  if (!res.ok) {
+    console.error(`[email] Resend error ${res.status}: ${body}`);
+  } else {
+    console.log(`[email] Resend OK: ${body}`);
+  }
   return res.ok;
+}
+
+// ── Brevo (fallback — 300 emails/day free, sender must be verified in Brevo) ──
+async function sendViaBrevo(
+  to: string,
+  subject: string,
+  html: string,
+  apiKey: string,
+): Promise<boolean> {
+  const res = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "api-key": apiKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sender: { name: APP_NAME, email: "noreply@sendinblue.com" },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+  const body = await res.text().catch(() => "");
+  if (!res.ok) {
+    console.error(`[email] Brevo error ${res.status}: ${body}`);
+  } else {
+    console.log(`[email] Brevo OK: ${body}`);
+  }
+  return res.ok || res.status === 201;
 }
 
 // ── Email HTML template ────────────────────────────────────────────────────
@@ -120,26 +127,28 @@ export async function sendMagicLinkEmail(to: string, token: string, env: Binding
   const subject = `Sign in to ${APP_NAME}`;
   const html = buildHtml(to, verifyUrl);
 
-  // 1. Brevo — primary (free, any recipient, 300/day)
-  if (env.BREVO_API_KEY) {
-    const sent = await sendViaBrevo(to, subject, html, env.BREVO_API_KEY);
-    if (sent) {
-      console.log(`[email] ✅ Sent via Brevo → ${to}`);
-      return;
-    }
-    console.warn("[email] Brevo failed, trying Resend...");
-  }
+  console.log(`[email] Sending magic link to ${to}`);
 
-  // 2. Resend — fallback (free but only own email without domain)
+  // 1. Resend — primary (free, works to ANY email with onboarding@resend.dev)
   if (env.RESEND_API_KEY) {
     const sent = await sendViaResend(to, subject, html, env.RESEND_API_KEY);
     if (sent) {
       console.log(`[email] ✅ Sent via Resend → ${to}`);
       return;
     }
-    console.warn("[email] Resend failed.");
+    console.warn("[email] Resend failed, trying Brevo...");
   }
 
-  // 3. Always log — visible in Cloudflare Worker logs
+  // 2. Brevo — fallback (free but sender must be verified in Brevo dashboard)
+  if (env.BREVO_API_KEY) {
+    const sent = await sendViaBrevo(to, subject, html, env.BREVO_API_KEY);
+    if (sent) {
+      console.log(`[email] ✅ Sent via Brevo → ${to}`);
+      return;
+    }
+    console.warn("[email] Brevo also failed.");
+  }
+
+  // 3. Last resort — log the link (visible in Cloudflare Worker logs)
   console.log(`[email] 🔗 MAGIC LINK for ${to} → ${verifyUrl}`);
 }
